@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"image"
-	"image/jpeg"
 	"image/png"
 	"io/ioutil"
 	"os"
@@ -15,7 +14,6 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/disintegration/imaging"
 	"github.com/fatih/color"
 	"github.com/sciter-sdk/go-sciter"
 	"github.com/sciter-sdk/go-sciter/window"
@@ -45,7 +43,10 @@ func main() {
 	win.DefineFunction("loadFirstImage", LoadFirstImage)
 	win.DefineFunction("loadNextImage", LoadNextImage)
 	win.DefineFunction("loadPreviousImage", LoadPreviousImage)
-	win.DefineFunction("brightCurrentImage", brightCurrentImage)
+
+	win.DefineFunction("operateCurrentImage", operateCurrentImage)
+	// win.DefineFunction("sharpCurrentImage", brightCurrentImage)
+
 	win.DefineFunction("closeWindow", closeApplication)
 
 	// Getting data from archive
@@ -147,12 +148,22 @@ func LoadPreviousImage(vals ...*sciter.Value) *sciter.Value {
 	return LoadFirstImage()
 }
 
-func brightCurrentImage(vals ...*sciter.Value) *sciter.Value {
+func operateCurrentImage(vals ...*sciter.Value) *sciter.Value {
 	cwd, _ := os.Getwd()
 	fmt.Println("your brightness perameter is ", vals[0].Float())
-	imageString := Bright(vals[0].Float(), Files[Index], cwd)
-	thisString := sciter.NewValue(imageString)
-	return thisString
+
+	// [0] - Operation
+	// [1] - Value
+	switch vals[0].String() {
+	case "bright":
+		return sciter.NewValue(Bright(vals[1].Float(), Files[Index], cwd))
+
+	case "sharpen":
+		return sciter.NewValue(Sharpen(vals[1].Float(), Files[Index], cwd))
+	default:
+		return sciter.NewValue("-")
+	}
+	return sciter.NewValue("-")
 }
 
 // getImage returns base64 string
@@ -182,58 +193,3 @@ func getImage(file os.FileInfo, thisDir string) image.Image {
 	}
 	return nil
 }
-
-func Bright(brightBy float64, file os.FileInfo, thisDir string) string {
-
-	img2 := imaging.AdjustBrightness(Images[Index], brightBy+NormalBirghtness)
-	mybuffer := new(bytes.Buffer)
-	jpeg.Encode(mybuffer, img2, nil)
-	return base64.StdEncoding.EncodeToString(mybuffer.Bytes())
-
-}
-
-// BlurImage
-// func Blur(file os.FileInfo, thisDir string) string {
-// 	fmt.Println("blurring image")
-// 	imageFile, imageFileErr := os.Open(filepath.Join(thisDir, file.Name()))
-// 	if imageFileErr != nil {
-// 		fmt.Println("failed to load image file")
-// 		return ""
-// 	}
-// 	srcImage, _, err := image.Decode(imageFile)
-// 	if err != nil {
-// 		fmt.Println("failed to load decode image")
-// 		return ""
-// 	}
-// 	dstImage := imaging.Blur(srcImage, 0.5)
-// 	tempDir := os.TempDir()
-// 	name, _ := uuid.NewV4()
-// 	tempFile, errTemp := os.OpenFile(path.Join(tempDir, name.String()),
-// 		os.O_CREATE|os.O_RDWR, os.ModeTemporary)
-
-// 	if errTemp != nil {
-// 		fmt.Println("failed to create temp file to store image ")
-// 		return ""
-// 	}
-// 	encodingFialed := png.Encode(tempFile, dstImage)
-// 	if encodingFialed != nil {
-// 		fmt.Println("failed to encode file to return", encodingFialed.Error())
-// 		return ""
-// 	}
-
-// 	state, statError := tempFile.Stat()
-// 	if statError != nil {
-// 		fmt.Println("failed to get error state ", statError.Error())
-// 		return ""
-// 	}
-
-// 	size := state.Size()
-// 	buf := make([]byte, size)
-
-// 	// Reading image file in buffer
-// 	fReader := bufio.NewReader(imageFile)
-// 	fReader.Read(buf)
-// 	imgStrging := base64.StdEncoding.EncodeToString(buf)
-// 	fmt.Println(imgStrging)
-// 	return imgStrging
-// }

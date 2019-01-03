@@ -45,7 +45,14 @@ function prevImage(){
 // by reading it agagin from the file 
 // and processing its byte at golang 
 function brightImage(brightBy){
-    var imgString = view.brightCurrentImage( toFloat(brightBy))
+    var imgString = view.operateCurrentImage("bright", toFloat(brightBy))
+    var bytes = Bytes.fromString(imgString);
+    var img = Image.fromBytes(bytes);
+    self.bindImage("in-memory:logo",img);  
+}
+
+function sharpenImage(brightBy){
+    var imgString = view.operateCurrentImage("sharpen", toFloat(brightBy))
     var bytes = Bytes.fromString(imgString);
     var img = Image.fromBytes(bytes);
     self.bindImage("in-memory:logo",img);  
@@ -59,13 +66,13 @@ event click $(#previous){
   prevImage()
 }
 
-//event click $(#blur){
-//    blurThisImage()
-//}
+event change $(#bright){
+    brightImage($(#bright).value)
+}
 
-event change $(#blur){
-//  view.msgbox(#alert, $(#blur).value)
-    brightImage($(#blur).value)
+
+event change $(#sharp){
+    sharpenImage($(#sharp).value)
 }
 
 self.on("mousewheel",function OnViewWheel(evt)
@@ -91,7 +98,9 @@ self.on("mousewheel",function OnViewWheel(evt)
         <button .btn #previous>&#xf048;</button>
         <button .btn #next>&#xf051;</button>
         <span style="color:#fff"> Brightness </span>
-        <input type="hslider"  #blur max="100" value="50"  step="10"/>
+        <input type="hslider"  #bright max="100" value="50"  step="10"/>
+        <span style="color:#fff"> Sharpness </span>
+        <input type="hslider"  #sharp max="100" value="50"  step="10"/>
         <button .btn role="window-close">&#xf00d;</button>
     </div>
     <div style="flow:horizontal;
