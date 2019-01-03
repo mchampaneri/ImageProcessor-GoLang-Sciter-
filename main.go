@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"image"
+	"image/jpeg"
 	"image/png"
 	"io/ioutil"
 	"os"
@@ -14,6 +16,7 @@ import (
 	"syscall"
 
 	"github.com/disintegration/imaging"
+	"github.com/fatih/color"
 	"github.com/sciter-sdk/go-sciter"
 	"github.com/sciter-sdk/go-sciter/window"
 )
@@ -22,8 +25,8 @@ const (
 	NormalBirghtness = -50.0
 )
 
-var Index int       // Stores current index of image
-var Images []string // Images stores base64 string of images
+var Index int            // Stores current index of image
+var Images []image.Image // Images stores base64 string of images
 var Files []os.FileInfo
 
 func main() {
@@ -79,9 +82,10 @@ func findAndLoadImageFromCurrentDirectory() {
 	}
 
 	if len(files) > 0 {
-		imgString := getImageString(files[0], thisDir)
-		if imgString != "" {
-			Images = append(Images, imgString)
+		img := getImage(files[0], thisDir)
+		if img != nil {
+			color.Yellow("First image has been loaded")
+			Images = append(Images, img)
 			Files = append(Files, files[0])
 		}
 	}
@@ -95,9 +99,9 @@ func findAndLoadImageFromCurrentDirectory() {
 			if i == 0 {
 				continue
 			}
-			imgString := getImageString(file, thisDir)
-			if imgString != "" {
-				Images = append(Images, imgString)
+			img := getImage(file, thisDir)
+			if img != nil {
+				Images = append(Images, img)
 				Files = append(Files, file)
 			}
 		}
@@ -112,8 +116,9 @@ func findAndLoadImageFromCurrentDirectory() {
 func LoadFirstImage(vals ...*sciter.Value) *sciter.Value {
 	if len(Images) > 0 {
 		Index = 0
-		fmt.Println("Returning first image")
-		return sciter.NewValue(Images[0])
+		buf := new(bytes.Buffer)
+		png.Encode(buf, Images[0])
+		return sciter.NewValue(base64.StdEncoding.EncodeToString(buf.Bytes()))
 	}
 	return sciter.NewValue(string("-"))
 }
@@ -123,10 +128,11 @@ func LoadFirstImage(vals ...*sciter.Value) *sciter.Value {
 func LoadNextImage(vals ...*sciter.Value) *sciter.Value {
 	if Index < len(Images)-1 {
 		Index++
-		return sciter.NewValue(Images[Index])
+		buf := new(bytes.Buffer)
+		png.Encode(buf, Images[Index])
+		return sciter.NewValue(base64.StdEncoding.EncodeToString(buf.Bytes()))
 	}
-	Index = 0
-	return sciter.NewValue(Images[0])
+	return LoadFirstImage()
 }
 
 // LoadPreviousImage return image from
@@ -134,10 +140,11 @@ func LoadNextImage(vals ...*sciter.Value) *sciter.Value {
 func LoadPreviousImage(vals ...*sciter.Value) *sciter.Value {
 	if Index > 0 {
 		Index--
-		return sciter.NewValue(Images[Index])
+		buf := new(bytes.Buffer)
+		png.Encode(buf, Images[Index])
+		return sciter.NewValue(base64.StdEncoding.EncodeToString(buf.Bytes()))
 	}
-	Index = len(Images) - 1
-	return sciter.NewValue(Images[0])
+	return LoadFirstImage()
 }
 
 func brightCurrentImage(vals ...*sciter.Value) *sciter.Value {
@@ -148,9 +155,9 @@ func brightCurrentImage(vals ...*sciter.Value) *sciter.Value {
 	return thisString
 }
 
-// getImageString returns base64 string
+// getImage returns base64 string
 // of file provided as input
-func getImageString(file os.FileInfo, thisDir string) string {
+func getImage(file os.FileInfo, thisDir string) image.Image {
 
 	// Just supporting jpg and png file to be loaded
 	// others are on the way .. .
@@ -158,43 +165,29 @@ func getImageString(file os.FileInfo, thisDir string) string {
 		imageFile, imageFileErr := os.Open(filepath.Join(thisDir, file.Name()))
 		if imageFileErr != nil {
 			fmt.Println("failed to load image file")
-			return ""
+			return nil
 		}
-		state, stateError := imageFile.Stat()
-		if stateError != nil {
-			fmt.Println("failed to get state of the image file ")
-			return ""
-		}
-		size := state.Size()
-		buf := make([]byte, size)
 
 		// Reading image file in buffer
 		fReader := bufio.NewReader(imageFile)
-		fReader.Read(buf)
 
+		Image, _, imageReadingErr := image.Decode(fReader)
+		if imageReadingErr != nil {
+			fmt.Println("faild to read image in image.Image", imageReadingErr.Error())
+			return nil
+		}
 		// Convert file to base64
-		imgStrging := base64.StdEncoding.EncodeToString(buf)
-		return imgStrging
+		// imgStrging := base64.StdEncoding.EncodeToString(buf)
+		return Image
 	}
-	return ""
+	return nil
 }
 
 func Bright(brightBy float64, file os.FileInfo, thisDir string) string {
 
-	imageFile, imageFileErr := os.Open(filepath.Join(thisDir, file.Name()))
-	if imageFileErr != nil {
-		fmt.Println("failed to load image file")
-		return ""
-	}
-	fmt.Println("image file loaded")
-	img, imgErr := png.Decode(imageFile)
-	if imgErr != nil {
-		fmt.Println("failed to decode image ", imgErr.Error())
-	}
-	img2 := imaging.AdjustBrightness(img, brightBy+NormalBirghtness)
+	img2 := imaging.AdjustBrightness(Images[Index], brightBy+NormalBirghtness)
 	mybuffer := new(bytes.Buffer)
-	png.Encode(mybuffer, img2)
-	fmt.Println("blurred retured")
+	jpeg.Encode(mybuffer, img2, nil)
 	return base64.StdEncoding.EncodeToString(mybuffer.Bytes())
 
 }
