@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"image"
+	"image/jpeg"
 	"image/png"
 	"io/ioutil"
 	"os"
@@ -14,6 +15,7 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/disintegration/imaging"
 	"github.com/fatih/color"
 	"github.com/sciter-sdk/go-sciter"
 	"github.com/sciter-sdk/go-sciter/window"
@@ -149,22 +151,37 @@ func LoadPreviousImage(vals ...*sciter.Value) *sciter.Value {
 }
 
 func operateCurrentImage(vals ...*sciter.Value) *sciter.Value {
-	cwd, _ := os.Getwd()
-	fmt.Println("your brightness perameter is ", vals[0].Float())
 
-	// [0] - Operation
-	// [1] - Value
-	switch vals[0].String() {
-	case "bright":
-		return sciter.NewValue(Bright(vals[1].Float(), Files[Index], cwd))
+	// [0] Brightness
+	// [1] Sharpness
+	immeditateOutput := imaging.AdjustBrightness(Images[Index], vals[0].Float()+NormalBirghtness)
+	immeditateOutput = imaging.Sharpen(immeditateOutput, vals[1].Float()+NormalBirghtness)
 
-	case "sharpen":
-		return sciter.NewValue(Sharpen(vals[1].Float(), Files[Index], cwd))
-	default:
-		return sciter.NewValue("-")
-	}
-	return sciter.NewValue("-")
+	// immeditateOutput := imaging.Sharpen(Images[Index], vals[0].Float()+NormalBirghtness)
+
+	mybuffer := new(bytes.Buffer)
+	jpeg.Encode(mybuffer, immeditateOutput, nil)
+	return sciter.NewValue(base64.StdEncoding.EncodeToString(mybuffer.Bytes()))
 }
+
+// func operateCurrentImage(vals ...*sciter.Value) *sciter.Value {
+// 	cwd, _ := os.Getwd()
+// 	fmt.Println("your brightness perameter is ", vals[0].Float())
+
+// 	// [0] - Operation
+// 	// [1] - Value
+// 	switch vals[0].String() {
+// 	case "bright":
+// 		return sciter.NewValue(Bright(vals[1].Float(), cwd))
+
+// 	case "sharpen":
+// 		return sciter.NewValue(Sharpen(vals[1].Float(), cwd))
+
+// 	default:
+// 		return sciter.NewValue("-")
+// 	}
+// 	return sciter.NewValue("-")
+// }
 
 // getImage returns base64 string
 // of file provided as input

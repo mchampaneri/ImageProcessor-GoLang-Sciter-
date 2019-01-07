@@ -44,20 +44,26 @@ function prevImage(){
 // function blurImage makes image blury
 // by reading it agagin from the file 
 // and processing its byte at golang 
-function brightImage(brightBy){
-    var imgString = view.operateCurrentImage("bright", toFloat(brightBy))
+//function brightImage(brightBy){
+//    var imgString = view.operateCurrentImage("bright", toFloat(brightBy))
+//    var bytes = Bytes.fromString(imgString);
+//    var img = Image.fromBytes(bytes);
+//    self.bindImage("in-memory:logo",img);  
+//}
+
+//function sharpenImage(brightBy){
+//   var imgString = view.operateCurrentImage("sharpen", toFloat(brightBy))
+//    var bytes = Bytes.fromString(imgString);
+//    var img = Image.fromBytes(bytes);
+//    self.bindImage("in-memory:logo",img);  
+//}
+
+function operateImage(brightBy, sharpenBy){
+    var imgString = view.operateCurrentImage( toFloat(brightBy) , toFloat(sharpenBy))
     var bytes = Bytes.fromString(imgString);
     var img = Image.fromBytes(bytes);
-    self.bindImage("in-memory:logo",img);  
+    self.bindImage("in-memory:logo",img); 
 }
-
-function sharpenImage(brightBy){
-    var imgString = view.operateCurrentImage("sharpen", toFloat(brightBy))
-    var bytes = Bytes.fromString(imgString);
-    var img = Image.fromBytes(bytes);
-    self.bindImage("in-memory:logo",img);  
-}
-
 event click $(#next ){
   nextImage()
 }
@@ -66,14 +72,17 @@ event click $(#previous){
   prevImage()
 }
 
-event change $(#bright){
-    brightImage($(#bright).value)
-}
-
-
 event change $(#sharp){
-    sharpenImage($(#sharp).value)
+    operateImage($(#bright).value,$(#sharp).value)
 }
+
+event change $(#bright){
+    operateImage($(#bright).value,$(#sharp).value)
+}
+
+//event change $(#sharp){
+//   sharpenImage($(#sharp).value)
+//}
 
 self.on("mousewheel",function OnViewWheel(evt)
 {
