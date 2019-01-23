@@ -80,6 +80,12 @@ event change $(#bright){
     operateImage($(#bright).value,$(#sharp).value)
 }
 
+event click (#resizer){
+    if (view.state == View.WINDOW_FULL_SCREEN){
+        view.state == View.WINDOW_RESTORE
+    }
+}
+
 //event change $(#sharp){
 //   sharpenImage($(#sharp).value)
 //}
@@ -104,23 +110,38 @@ self.on("mousewheel",function OnViewWheel(evt)
         <span style="color: #fff; font-size: 12pt;font-family: system">
             Image viewer
         </span>
+        <!-- Previous and next buttons -->
         <button .btn #previous>&#xf048;</button>
         <button .btn #next>&#xf051;</button>
-        <span style="color:#fff"> Brightness </span>
-        <input type="hslider"  #bright max="100" value="50"  step="10"/>
-        <span style="color:#fff"> Sharpness </span>
-        <input type="hslider"  #sharp max="100" value="50"  step="10"/>
-        <button .btn role="window-close">&#xf00d;</button>
+        <!-- / Previous and next buttons -->
+        <!-- close button -->
+        <button  style="float:right" .btn role="window-close">&#xf00d;</button>
+        <button style="float:right" .btn #resizer role="window-restore">&#xf2d0;</button>
+        <button style="float:right" .btn role="window-minimize">&#xf2d1;</button>
+        <!-- / close button-->
     </div>
-    <div style="flow:horizontal;
-    horizontal-align:center;
-    vertical-align: middle;
-    height: *;
-    width:*;
-    ">
-        <img #image height="auto" width="600" src="in-memory:logo"
-         style="box-shadow: 9px 7px 59px 12px rgba(0,0,0,0.75);">
+    <div style=" flow: grid( 1  4) ">
+        <div class="toolbar" style="background:rgba(0,0,0,0.75);padding:5dip;">
+            <!-- Image processing sliders -->
+            <span style="color:#fff"> Brightness </span>
+            <input type="hslider"  #bright max="100" value="50"  step="10"/>
+            <span style="color:#fff"> Sharpness </span>
+            <input type="hslider"  #sharp max="100" value="50"  step="10"/>
+            <!-- / Image processing sliders w-->
+        </div>
+
+        <div style="flow:horizontal;
+        horizontal-align:center;
+        vertical-align: middle;
+        height: *;
+        width:*;
+        ">
+            <img #image height="auto" width="600" src="in-memory:logo"
+             style="box-shadow: 9px 7px 59px 12px rgba(0,0,0,0.75);">
+        </div>
     </div>
+  
+   
 </body>
 
 

@@ -30,6 +30,8 @@ var Images []image.Image // Images stores base64 string of images
 var Files []os.FileInfo
 
 func main() {
+
+	fmt.Println("loading image viwer")
 	// make rect for window
 	rect := sciter.NewRect(0, 0, 800, 600)
 
@@ -57,6 +59,7 @@ func main() {
 
 	// Running app
 	win.Show()
+	fmt.Println("ImageViwer is running")
 	win.Run()
 	win.CloseArchive()
 }
@@ -117,6 +120,7 @@ func findAndLoadImageFromCurrentDirectory() {
 // image from Image array
 // to sciter
 func LoadFirstImage(vals ...*sciter.Value) *sciter.Value {
+	fmt.Println("Loading first image")
 	if len(Images) > 0 {
 		Index = 0
 		buf := new(bytes.Buffer)
@@ -163,25 +167,6 @@ func operateCurrentImage(vals ...*sciter.Value) *sciter.Value {
 	jpeg.Encode(mybuffer, immeditateOutput, nil)
 	return sciter.NewValue(base64.StdEncoding.EncodeToString(mybuffer.Bytes()))
 }
-
-// func operateCurrentImage(vals ...*sciter.Value) *sciter.Value {
-// 	cwd, _ := os.Getwd()
-// 	fmt.Println("your brightness perameter is ", vals[0].Float())
-
-// 	// [0] - Operation
-// 	// [1] - Value
-// 	switch vals[0].String() {
-// 	case "bright":
-// 		return sciter.NewValue(Bright(vals[1].Float(), cwd))
-
-// 	case "sharpen":
-// 		return sciter.NewValue(Sharpen(vals[1].Float(), cwd))
-
-// 	default:
-// 		return sciter.NewValue("-")
-// 	}
-// 	return sciter.NewValue("-")
-// }
 
 // getImage returns base64 string
 // of file provided as input
